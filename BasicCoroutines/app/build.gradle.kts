@@ -51,4 +51,13 @@ dependencies {
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
+
+    /*
+    Tidak Perlu import ini karna sudah within project
+    implementation("org.jetbrains.kolinx:kotlinx-coroutines-core")
+    implementation("org.jetbrains.kolinx:kotlinx-coroutines-android")
+    implementation(libs.kotlinx.coroutines.android)
+    implementation(libs.kotlinx.coroutines.core)
+     */
+
 }

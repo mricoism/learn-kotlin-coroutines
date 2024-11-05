@@ -14,6 +14,8 @@ junit = { group = "junit", name = "junit", version.ref = "junit" }
 androidx-junit = { group = "androidx.test.ext", name = "junit", version.ref = "junitVersion" }
 androidx-espresso-core = { group = "androidx.test.espresso", name = "espresso-core", version.ref = "espressoCore" }
 androidx-appcompat = { group = "androidx.appcompat", name = "appcompat", version.ref = "appcompat" }
+kotlinx-coroutines-android = { module = "org.jetbrains.kolinx:kotlinx-coroutines-android" }
+kotlinx-coroutines-core = { module = "org.jetbrains.kolinx:kotlinx-coroutines-core" }
 material = { group = "com.google.android.material", name = "material", version.ref = "material" }
 
 [plugins]
