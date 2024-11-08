@@ -1,8 +1,10 @@
 package com.mricoism.lifecyclescopeandviewmodelscope
 
+import android.content.Intent
 import android.os.Bundle
 import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.lifecycleScope
 import com.mricoism.lifecyclescopeandviewmodelscope.databinding.ActivityMainBinding
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
@@ -23,60 +25,63 @@ class MainActivity: AppCompatActivity() {
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        GlobalScope.launch(Dispatchers.IO) {
-            // Kotlin has function to see time difference. Witch we can easily measure the time a piece of code needs for execution
-            val time = measureTimeMillis {
-                /*
-                // This code bellow will add up. Because each of them is delay for 3 second. Then the total it till take 6 second to complete them both
-//                val answer1 = networkCall1()
-//                val answer2 = networkCall2()
-//                Log.d(TAG, "Answer 1: $answer1")
-//                Log.d(TAG, "Answer 2: $answer2")
-                */
-
-                /*
-                // Some solution for make sure both executed at the same time.
-                // This code below is one of solution, but its bad practice.
-                var answer1: String? = null
-                var answer2: String? = null
-                val job1 = launch { answer1 = networkCall1() }
-                val job2 = launch { answer2 = networkCall2() }
-                job1.join()
-                job2.join()
-                Log.d(TAG, "Answer 1: $answer1")
-                Log.d(TAG, "Answer 2: $answer2")
-                 */
-
-                // As i mentioned above, we have some better solution for make sure both executed at the same time.
-                // Using async. Its similiar to launch, it also start new coroutine but it won't return a job.
-                // not like launch, it instead will return a deferred. Can be used to get the result.
-                val answer1 = async { networkCall1() }
-                val answer2 = async { networkCall2() }
-
-                // Because its return Deferred<String>. We need to use .await()
-                // .await() witch will block our current coroutine. Until the answer is available
-                Log.d(TAG, "Answer 1: ${answer1.await()}")
-                Log.d(TAG, "Answer 2: ${answer2.await()}")
+        binding.Button.setOnClickListener {
+            /*
+            // This is to demonstrate that GlobalScope become bad practice
+            GlobalScope.launch {
+                while (true) { // Create Global scope and keep it alive (infinity loop)
+                    delay(1000L) // delay each loop iteration for 1 second
+                    Log.d(TAG, "Strill running..")
+                }
             }
 
-            //and we can this async instead of launch for the global scope.
-            //GlobalScope.async {  }
+            // this GlobalScope will executed at the same time with GlobalScope above.
+            GlobalScope.launch { // Another Global Scope for start new activity.
+                delay(5000L)
 
-            Log.d(TAG, "Request took $time mili seconds")
+                // using `this@MainActivity` because we inside coroutine scope, so we cannot just use `this`
+                Intent(this@MainActivity, SecondActivity::class.java).also {
+                    startActivity(it) // start new activity (SecondActivity)
+                    finish() // its will quit our current main activity, after we started our SecondActivity
+                }
+            }
+            */
+            // Explanation:
+            // So our goal is to show that if we using GlobalScope (infinity loop) and we change or move activity.
+            // it will keep live. Even tho we has move to SecondActivity.
+            // It won't be destroy if our activity destroy. Instead it will be destroyed when our whole application is destroyed.
+            // And its very big mistake, that can easily create memory leaks.
+            // Because if the coroutine started in main activity, uses resources of that main activity, witch is now destroyed.
+            // The resources won't garbage collected, even though the activity is destroyed. because the coroutine still uses those resources.
 
+
+
+            // And to solve this problem, we should swap out Global scope with lifecycleScope
+            lifecycleScope.launch {
+                // What this will do ?, it will stick this coroutine to the lifecycle of our activity.
+                // So if our activity is destroyed, that means that all coroutines launch in this lifecycleScope will also destroyed.
+                while (true) {
+                    delay(1000L)
+                    Log.d(TAG, "Strill running..")
+                }
+                // Just keep in mind if you long running calculation and doesn't suspend.
+                // you must regularly check if it is active. Otherwise it can't be canceled (check learn source about jobs and cancellation)
+            }
+            GlobalScope.launch {
+                delay(5000L)
+                Intent(this@MainActivity, SecondActivity::class.java).also {
+                    startActivity(it)
+                    finish()
+                }
+            }
+
+            // Another scope that is included is viewModelScope.
+            // This don't have example because its just the same as lifecycleScope.
+            // Only that it will keep your coroutines alive as long as your viewModel is alive.
 
 
 
         }
-    }
 
-    suspend fun networkCall1(): String {
-        delay(3000L)
-        return "Answter 1"
     }
-    suspend fun networkCall2(): String {
-        delay(3000L)
-        return "Answter 2"
-    }
-
 }
