@@ -27,6 +27,7 @@ class MainActivity: AppCompatActivity() {
             .build()
             .create(MyAPI::class.java)
 
+        // Solve issue wrong import
         api.getComments().enqueue(object : Callback<List<Comment>> {
             override fun onFailure(call: Call<List<Comment>>, t: Throwable) {
                 Log.e(TAG, "Error: $t")
